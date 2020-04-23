@@ -7,7 +7,9 @@ HLT = 0b00000001
 MUL = 0b10100010
 ADD = 0b10100000
 PUSH = 0b01000101
-POP = 0b1000110
+POP = 0b01000110
+CALL = 0b01010000
+RET = 0b00010001
 
 SP = 7
 
@@ -28,7 +30,9 @@ class CPU:
             PUSH: self.PUSH,
             POP: self.POP,
             LDI: self.LDI,
-            PRN: self.PRN
+            PRN: self.PRN,
+            CALL: self.CALL,
+            RET: self.RET
         }
 
     def load(self, filename):
@@ -147,3 +151,22 @@ class CPU:
 
     def HLT(self):
         sys.exit(0)
+
+    def CALL(self, reg_a):
+        # compute return address
+        return_addr = self.pc + 2
+
+        # push on to stack
+        self.register[SP] -= 1
+        self.ram[self.register[SP]] = return_addr
+
+        # set the PC to the value in the given register
+        self.pc = self.register[reg_a]
+
+    def RET(self):
+        # pop return address from top of stack 
+        return_addr = self.ram[self.register[SP]]
+        self.register[SP] += 1
+
+        # set the pc countner
+        self.pc = return_addr
