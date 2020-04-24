@@ -14,6 +14,13 @@ CMP = 0b10100111
 JMP = 0b01010100
 JNE = 0b01010110
 JEQ = 0b01010101
+AND = 0b10101000
+OR = 0b10101010
+XOR = 0b10101011
+NOT = 0b01101001
+SHL = 0b10101100
+SHR = 0b10101100
+MOD = 0b10100100
 
 SP = 7
 
@@ -41,7 +48,14 @@ class CPU:
             CMP: self.alu,
             JMP: self.JMP,
             JNE: self.JNE,
-            JEQ: self.JEQ
+            JEQ: self.JEQ,
+            AND: self.alu,
+            OR: self.alu,
+            XOR: self.alu,
+            NOT: self.alu,
+            SHL: self.alu,
+            SHR: self.alu,
+            MOD: self.alu
         }
 
     def load(self, filename):
@@ -101,6 +115,39 @@ class CPU:
             elif self.register[reg_a] == self.register[reg_b]:
                 self.fl = 0b00000100 # set flag to 4
             self.pc += 3
+
+        elif op == AND:
+            self.register[reg_a] = self.register[reg_a] & self.register[reg_b]
+            self.pc += 3
+        
+        elif op == OR:
+            self.register[reg_a] = self.register[reg_a] or self.register[reg_b]
+            self.pc += 3
+
+        elif op == XOR:
+            self.register[reg_a] = self.register[reg_a] ^ self.register[reg_b]
+            self.pc += 3
+
+        elif op == NOT:
+            self.register[reg_a] = ~self.register[reg_a]
+            self.pc += 2
+
+        elif op == SHL:
+            self.register[reg_a] = self.register[reg_a] << self.register[reg_b]
+            self.pc += 3
+
+        elif op == SHR:
+            self.register[reg_a] = self.register[reg_a] >> self.register[reg_b]
+            self.pc += 3
+
+        elif op == MOD:
+            if self.register[reg_b] == 0:
+                print("ERROR: Cannot divide by 0")
+                sys.exit(1)
+            self.register[reg_a] %= self.register[reg_b]
+            self.pc += 3
+        
+
      
         else:
             raise Exception("Unsupported ALU operation")
