@@ -621,7 +621,7 @@ Shift the value in registerA right by the number of bits specified in registerB,
 filling the high bits with 0.
 
 ```
-10101101 00000aaa 00000bbb
+c 00000aaa 00000bbb
 AD 0a 0b
 ```
 
