@@ -10,6 +10,10 @@ PUSH = 0b01000101
 POP = 0b01000110
 CALL = 0b01010000
 RET = 0b00010001
+CMP = 0b10100111
+JMP = 0b01010100
+JNE = 0b01010110
+JEQ = 0b01010101
 
 SP = 7
 
@@ -21,6 +25,7 @@ class CPU:
         self.register = [0] * 8
         self.ram = [0] * 256
         self.pc = 0
+        self.fl = 0
 
         # implement branchtable
         self.bt = {
@@ -32,7 +37,11 @@ class CPU:
             LDI: self.LDI,
             PRN: self.PRN,
             CALL: self.CALL,
-            RET: self.RET
+            RET: self.RET,
+            CMP: self.alu,
+            JMP: self.JMP,
+            JNE: self.JNE,
+            JEQ: self.JEQ
         }
 
     def load(self, filename):
@@ -73,6 +82,25 @@ class CPU:
         elif op == MUL:
             self.register[reg_a] *= self.register[reg_b]
             self.pc += 3
+        
+        elif op == CMP:
+            '''
+            * `L` Less-than: during a `CMP`, set to 1 if registerA is less than registerB,
+             zero otherwise.
+*           `G` Greater-than: during a `CMP`, set to 1 if registerA is greater than
+            registerB, zero otherwise.
+            * `E` Equal: during a `CMP`, set to 1 if registerA is equal to registerB, zero
+            otherwise.
+            '''
+            if self.register[reg_a] < self.register[reg_b]:
+                self.fl = 0b00000001 # set flag to 1
+            
+            elif self.register[reg_a] > self.register[reg_b]:
+                self.fl = 0b00000010 # set flag to 2
+            
+            elif self.register[reg_a] == self.register[reg_b]:
+                self.fl = 0b00000100 # set flag to 4
+            self.pc += 3
      
         else:
             raise Exception("Unsupported ALU operation")
@@ -91,7 +119,7 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
+            self.fl,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -115,7 +143,7 @@ class CPU:
             operand_b = self.ram_read(ir + 2)
 
             if op in self.bt:
-                if op in [ADD, MUL]:
+                if op in [ADD, MUL, CMP]:
                     self.bt[op](op, operand_a, operand_b)
                 elif op >> 6 == 0:
                     self.bt[op]()
@@ -170,3 +198,22 @@ class CPU:
 
         # set the pc countner
         self.pc = return_addr
+
+    def JMP(self, reg_a):
+        # set the pc to the address stored in given register
+        self.pc = self.register[reg_a]
+    
+    def JNE(self, reg_a):
+        # if E flag is false/0, jump to address in given register
+        if self.fl != 0b00000100:
+            self.JMP(reg_a)
+        else:
+            self.pc +=2
+    
+    def JEQ(self, reg_a):
+        # if `equal` flag is true, jump to address stored in given register
+        if self.fl == 0b00000100:
+            self.JMP(reg_a)
+        else:
+            self.pc += 2
+
